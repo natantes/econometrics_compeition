@@ -141,7 +141,8 @@ vce(cluster schoolcode)
 
 
 
-insheet using "/Users/natan/Dev/econometrics_compeition/new_drop.csv", clear
+// insheet using "/Users/natan/Dev/econometrics_compeition/new_drop.csv", clear
+insheet using "/Dev/econometrics_compeition/new_drop.csv", clear
 
 encode schoolcode, generate(finalschoolcode)
 
@@ -170,11 +171,20 @@ g lowincome_int = schoolmode * lowincome
 
 
 // regress elapass against 
-eststo CA: areg dropout schoolmode white black hispanic classize_int lowincome retention attendance ///
+eststo DROP_NORMAL: areg dropout schoolmode white black hispanic classize_int lowincome retention attendance ///
 t18 t19 [aweight=totaltested], absorb(schoolcode) vce(cluster schoolcode)
 
-eststo CL: areg dropout schoolmode white black hispanic lowincome_int lowincome retention attendance ///
+eststo DROP_LOWINC: areg dropout schoolmode white black hispanic lowincome_int lowincome retention attendance ///
 t18 t19 [aweight=totaltested], absorb(schoolcode) vce(cluster schoolcode)
+
+eststo DROP_1: areg dropout schoolmode white black hispanic classize_int lowincome retention attendance ///
+t18 t19 [aweight=totaltested] if schoolmode <= 0.25, absorb(schoolcode) vce(cluster schoolcode) 
+
+eststo DROP_2: areg dropout schoolmode white black hispanic classize_int lowincome retention attendance ///
+t18 t19 [aweight=totaltested] if schoolmode < 0.5, absorb(schoolcode) vce(cluster schoolcode)
+
+eststo DROP_3: areg dropout schoolmode white black hispanic classize_int lowincome retention attendance ///
+t18 t19 [aweight=totaltested] if schoolmode >= 0.5, absorb(schoolcode) vce(cluster schoolcode)
 
 
 
@@ -219,7 +229,7 @@ stats(N, fmt(%18.0g) labels("\midrule Observations")) ///
 mgroups("\textbf{\emph{Dependent Variables}}", pattern(1 0 0 0) ///
 prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span}))
 
-esttab AA BA CA AL BL CL using "/Users/natan/Dev/econometrics_compeition/table2.tex", ///
+esttab AA BA DROP_NORMAL AL BL DROP_LOWINC using "/Users/natan/Dev/econometrics_compeition/table2.tex", ///
 drop(_cons white black hispanic disability t18 t19 attendance) ///
 coeflabels(schoolmode "Learning Mode" H_int "Hispanic I" B_int "Black I" ///
 lowincome "Low Income" female "Female" totaltested "Total Tested" ///
